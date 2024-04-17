@@ -77,10 +77,11 @@ class FacultyCrawler:
         self.faculty_list = faculty_list
         return faculty_list
 
+    # Q5 Load the faculty data into MongoDB
     def load_faculty(self):
         client = pymongo.MongoClient('mongodb://localhost:27017/')
         db = client['cpp']
-        collection = db['faculty']
+        collection = db['professors']
         for faculty in self.faculty_list:
             if not collection.find_one({'name': faculty['name']}):
                 collection.insert_one(faculty)
