@@ -1,0 +1,41 @@
+# Editor directories and files
+.vscode/
+*.sublime*
+.idea/
+*.swp
+*~
+
+# OS generated files #
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Node modules
+node_modules/
+
+# Build outputs
+dist/
+tmp/
+out/
+build/
+logs/
+*.log
+npm-debug.log*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Java
+target/
+
+# Others
+.env
+.cache
+.history
+.tmp
