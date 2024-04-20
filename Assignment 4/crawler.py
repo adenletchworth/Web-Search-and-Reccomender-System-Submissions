@@ -6,19 +6,22 @@ from collections import deque
 from urllib.parse import urljoin
 import pymongo
 
+
 class FacultyCrawler:
     def __init__(self, seed_url):
         self.seed_url = seed_url
         self.frontier = deque([seed_url])
         self.visited = set()
         self.target_url = None
-        
+    
+    # Helper function to check if the page is the target page (Permanent Faculty page)
     def is_target(self, soup):
         title_tag = soup.find('title')
         if title_tag and title_tag.string:  
             return bool(re.search('Permanent Faculty', title_tag.string))
         return False
     
+    # Q4 Crawl the website to find the target page
     def crawl_for_target(self):
         while self.frontier:
             url = self.frontier.popleft()
@@ -47,7 +50,7 @@ class FacultyCrawler:
         print("Target not found.")
         return None
 
-    
+    # Q5 Parse the faculty data from the target page    
     def crawl_for_faculty(self):
         with urlopen(self.target_url) as response:
             html_content = response.read()
@@ -63,16 +66,19 @@ class FacultyCrawler:
                 continue
             
             faculty_details_raw = raw_faculty.find('p')
-            faculty_details = faculty_details_raw.find_all('strong')
-            faculty_contact = faculty_details_raw.find_all('a')
+            details_text = faculty_details_raw.text.strip('\t')
             
-            faculty_data['name'] = name.get_text(strip=True)
-            faculty_data['title'] = faculty_details[0].text
-            faculty_data['office'] = faculty_details[1].text
-            faculty_data['phone'] = faculty_details[2].text
-            faculty_data['email'] = faculty_contact[0].text
-            faculty_data['web'] = faculty_contact[1].text
-            faculty_list.append(faculty_data)
+            pattern = r"Title:\s*(.*?)\s*Office:\s*(.*?)\s*Phone:\s*(.*?)\s*Email:\s*(.*?)\s*Web:\s*(.*?)(?=\s*Title:|$)"
+            match = re.search(pattern, details_text)
+            
+            if match:
+                faculty_data['name'] = name.get_text(strip=True)
+                faculty_data['title'] = match.group(1).strip()
+                faculty_data['office'] = match.group(2).strip()
+                faculty_data['phone'] = match.group(3).strip()
+                faculty_data['email'] = match.group(4).strip()
+                faculty_data['web'] = match.group(5).strip()
+                faculty_list.append(faculty_data)
         
         self.faculty_list = faculty_list
         return faculty_list
@@ -87,13 +93,15 @@ class FacultyCrawler:
                 collection.insert_one(faculty)
         
 if __name__ == '__main__':
-    crawler = FacultyCrawler('https://www.cpp.edu/sci/computer-science/faculty-and-staff/permanent-faculty.shtml')
+    crawler = FacultyCrawler('https://www.cpp.edu/sci/computer-science/')
     target_url = crawler.crawl_for_target()
     if target_url:
         faculty_list = crawler.crawl_for_faculty()
         crawler.load_faculty()
     else:
         print("Target URL not found.")
+        
+
 
             
 
