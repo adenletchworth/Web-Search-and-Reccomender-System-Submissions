@@ -13,6 +13,10 @@ class FacultyCrawler:
         self.frontier = deque([seed_url])
         self.visited = set()
         self.target_url = None
+        self.client = pymongo.MongoClient('mongodb://localhost:27017/')
+        self.db = self.client['cpp']
+        self.documents_collection = self.db['documents']  
+        self.faculty_collection = self.db['professors']
     
     # Helper function to check if the page is the target page (Permanent Faculty page)
     def is_target(self, soup):
@@ -31,6 +35,8 @@ class FacultyCrawler:
                 with urlopen(url) as response:
                     html_content = response.read()
                     soup = BeautifulSoup(html_content, 'html.parser')
+
+                    self.documents_collection.insert_one({'url': url, 'html': soup.prettify()})
 
                     if self.is_target(soup):
                         print("Target found:", url)
@@ -85,12 +91,9 @@ class FacultyCrawler:
 
     # Q5 Load the faculty data into MongoDB
     def load_faculty(self):
-        client = pymongo.MongoClient('mongodb://localhost:27017/')
-        db = client['cpp']
-        collection = db['professors']
         for faculty in self.faculty_list:
-            if not collection.find_one({'name': faculty['name']}):
-                collection.insert_one(faculty)
+            if not self.faculty_collection.find_one({'name': faculty['name']}):
+                self.faculty_collection.insert_one(faculty)
         
 if __name__ == '__main__':
     crawler = FacultyCrawler('https://www.cpp.edu/sci/computer-science/')
